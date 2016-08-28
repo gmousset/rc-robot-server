@@ -3,6 +3,8 @@
  */
 package com.github.gmousset.rcrobotserver.uart;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,12 +42,12 @@ public class UARTManager {
 	}
 	
 	private void setupEngineObserver() {
-		this.robot.getLeftPower().distinctUntilChanged().subscribe(power -> {
+		this.robot.getLeftPower().distinctUntilChanged().debounce(500, TimeUnit.MILLISECONDS).subscribe(power -> {
 			final UARTCommand command = new EnginePowerCommand(Location.LEFT, power);
 			this.sendCommand(command);
 		});
 		
-		this.robot.getRightPower().distinctUntilChanged().subscribe(power -> {
+		this.robot.getRightPower().distinctUntilChanged().debounce(500, TimeUnit.MILLISECONDS).subscribe(power -> {
 			final UARTCommand command = new EnginePowerCommand(Location.RIGHT, power);
 			this.sendCommand(command);
 		});
@@ -53,6 +55,7 @@ public class UARTManager {
 	
 	private void sendCommand(final UARTCommand pCommand) {
 		LOGGER.debug("[UART-Tx] " + pCommand.toUART());
+		
 		try {
 			this.connection.sendCommand(pCommand);
 		} catch (UARTConnectionException e) {

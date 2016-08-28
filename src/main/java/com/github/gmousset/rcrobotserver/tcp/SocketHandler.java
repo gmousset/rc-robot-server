@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,36 +34,41 @@ public class SocketHandler implements Runnable {
 	}
 	
 	public void run() {
-		
 		try (final InputStream in = this.socket.getInputStream();
 				final OutputStream out = this.socket.getOutputStream()) {
 			
 			LOGGER.info("connection with " + socket.getRemoteSocketAddress() + " opened");
 			this.inputStream = new BufferedInputStream(this.socket.getInputStream());
-			//this.outputStream = new BufferedOutputStream(this.socket.getOutputStream());
 			
 			while (!this.socket.isClosed()) {
 				if (this.inputStream.available() > 0) {
 					byte[] inBytes = new byte[this.inputStream.available()];
 					this.inputStream.read(inBytes);
 					final String mesg = new String(inBytes).trim();
-					LOGGER.debug("[SRVR-Rx] " + mesg);
+					final String[] subMessages = mesg.split("\n");
 					
-					if (mesg.equalsIgnoreCase(Command.BYE.getValue())) {
-						this.socket.close();
-					} else if (mesg.startsWith(Command.ENGINES_POWER.getValue())) {
-						final String rawParameters = mesg.substring(Command.ENGINES_POWER.getValue().length() + 1);
-						final String[] parameters = rawParameters.split(":");
-						if (parameters.length == 2) {
+					Arrays.asList(subMessages).stream().forEach(message -> {
+						LOGGER.debug("[SRVR-Rx] " + message);
+						if (message.equalsIgnoreCase(Command.BYE.getValue())) {
 							try {
-								final Float powLeft = Float.valueOf(parameters[0]);
-								final Float powRight = Float.valueOf(parameters[1]);
-								this.robot.setEnginesPower(powLeft, powRight);
-							} catch (final NumberFormatException nfe) {
-								LOGGER.warn("ignore command: " + mesg);
+								this.socket.close();
+							} catch (IOException e) {
+								LOGGER.error(e.getMessage());
+							}
+						} else if (message.startsWith(Command.ENGINES_POWER.getValue())) {
+							final String rawParameters = mesg.substring(Command.ENGINES_POWER.getValue().length() + 1);
+							final String[] parameters = rawParameters.split(":");
+							if (parameters.length == 2) {
+								try {
+									final Float powLeft = Float.valueOf(parameters[0]) / 100;
+									final Float powRight = Float.valueOf(parameters[1]) / 100;
+									this.robot.setEnginesPower(powLeft, powRight);
+								} catch (final NumberFormatException nfe) {
+									LOGGER.warn("ignore command: " + mesg);
+								}
 							}
 						}
-					}
+					});
 				}
 			}
 			LOGGER.debug("connection with " + this.socket.getRemoteSocketAddress() + " closed");
