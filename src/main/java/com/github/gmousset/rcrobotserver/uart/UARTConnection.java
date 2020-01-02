@@ -3,6 +3,9 @@
  */
 package com.github.gmousset.rcrobotserver.uart;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
@@ -13,6 +16,7 @@ import jssc.SerialPortException;
  */
 public class UARTConnection {
 	
+	private static final Logger LOGGER = LogManager.getLogger(UARTConnection.class);
 	private final String port;
 	private SerialPort serialPort;
 	
@@ -35,8 +39,10 @@ public class UARTConnection {
 	}
 	
 	public void sendCommand(final UARTCommand pCommand) throws UARTConnectionException {
+		byte[] bytesCmd = pCommand.toUART();
+		LOGGER.debug("[UART-Tx] " + bytesCmd[0] + "  " + bytesCmd[1] + "  " + bytesCmd[2] + "  " + bytesCmd[3]);
 		try {
-			this.serialPort.writeString(pCommand.toUART() + "\n");
+			this.serialPort.writeBytes(pCommand.toUART());
 		} catch (SerialPortException e) {
 			throw new UARTConnectionException(e);
 		}

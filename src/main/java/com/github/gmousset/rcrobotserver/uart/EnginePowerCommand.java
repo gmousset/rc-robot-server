@@ -8,7 +8,7 @@ package com.github.gmousset.rcrobotserver.uart;
  *
  */
 public class EnginePowerCommand implements UARTCommand {
-	private final String cmdFormat = "EPW:%c:%c:%03d";	// location:direction:power
+	//private final String cmdFormat = "EPW:%c:%c:%03d";	// location:direction:power
 	private final Location location;
 	private final Direction direction;
 	private final Integer power;
@@ -24,9 +24,9 @@ public class EnginePowerCommand implements UARTCommand {
 		}
 	}
 	
-	public String toUARTString() {
-		return String.format(cmdFormat, this.location.value(), this.direction.value, this.power);
-	}
+	//public String toUARTString() {
+	//	return String.format(cmdFormat, this.location.value(), this.direction.value, this.power);
+	//}
 	
 	@Override
 	public byte[] toUART() {
@@ -36,7 +36,7 @@ public class EnginePowerCommand implements UARTCommand {
 		 * Direction:	1 byte
 		 * Power:		1 byte
 		 */
-		final byte[] command = new byte[6];
+		final byte[] command = new byte[4];
 		command[0] = UARTCommand.UARTBytesCommand.ENGINE_POWER.value();
 		command[1] = this.location.value; 
 		command[2] = this.direction.value;

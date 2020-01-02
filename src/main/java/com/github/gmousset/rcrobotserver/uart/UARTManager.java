@@ -42,20 +42,18 @@ public class UARTManager {
 	}
 	
 	private void setupEngineObserver() {
-		this.robot.getLeftPower().distinctUntilChanged().debounce(500, TimeUnit.MILLISECONDS).subscribe(power -> {
+		this.robot.getLeftPower().distinctUntilChanged().debounce(20, TimeUnit.MILLISECONDS).subscribe(power -> {
 			final UARTCommand command = new EnginePowerCommand(Location.LEFT, power);
 			this.sendCommand(command);
 		});
 		
-		this.robot.getRightPower().distinctUntilChanged().debounce(500, TimeUnit.MILLISECONDS).subscribe(power -> {
+		this.robot.getRightPower().distinctUntilChanged().debounce(20, TimeUnit.MILLISECONDS).subscribe(power -> {
 			final UARTCommand command = new EnginePowerCommand(Location.RIGHT, power);
 			this.sendCommand(command);
 		});
 	}
 	
 	private void sendCommand(final UARTCommand pCommand) {
-		LOGGER.debug("[UART-Tx] " + pCommand.toUART());
-		
 		try {
 			this.connection.sendCommand(pCommand);
 		} catch (UARTConnectionException e) {
